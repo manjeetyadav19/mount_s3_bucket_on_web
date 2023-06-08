@@ -1,0 +1,58 @@
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const port = 8081;
+const directoryPath = '/app/s3'; // Replace with the actual path to your directory
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/') {
+    // Serve the HTML file
+    fs.readFile(path.join(__dirname, 'index.html'), { encoding: 'utf8' }, (err, content) => {
+      if (err) {
+        res.writeHead(500);
+        res.end('Error reading HTML file');
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(content);
+      }
+    });
+  } else if (req.url === '/files') {
+    // Serve the list of files as JSON
+    fs.readdir(directoryPath, (err, files) => {
+      if (err) {
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: 'Error reading directory' }));
+      } else {
+        const fileList = files.map(file => ({
+          name: file,
+          url: `/files/${file}`,
+        }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(fileList));
+      }
+    });
+  } else if (req.url.startsWith('/files/')) {
+    // Serve the requested file
+    const requestedFile = req.url.slice(7); // Remove '/files/' from the URL
+    const filePath = path.join(directoryPath, requestedFile);
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        res.writeHead(500);
+        res.end('Error reading file');
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end(content);
+      }
+    });
+  } else {
+    // Handle invalid URLs
+    res.writeHead(404);
+    res.end('Invalid URL');
+  }
+});
+
+server.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
+

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>File Listing</title>
+</head>
+<body>
+  <h1>File Listing</h1>
+  <ul id="file-list"></ul>
+
+  <script>
+    function downloadFile(url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = url.substring(url.lastIndexOf('/') + 1);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    fetch('/files')
+      .then(response => response.json())
+      .then(data => {
+        const fileList = document.getElementById('file-list');
+        data.forEach(file => {
+          const listItem = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = '#';
+          link.textContent = file.name;
+          link.addEventListener('click', () => {
+            downloadFile(file.url);
+          });
+          listItem.appendChild(link);
+          fileList.appendChild(listItem);
+        });
+      })
+      .catch(error => console.error(error));
+  </script>
+</body>
+</html>
+
